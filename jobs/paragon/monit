@@ -1,0 +1,5 @@
+check process paragon
+  with pidfile /var/vcap/sys/run/paragon/pid
+  start program /var/vcap/jobs/paragon/bin/start
+  stop program /var/vcap/jobs/paragon/bin/stop
+  group vcap
