@@ -1,0 +1,99 @@
+---
+resources:
+- name: sipid
+  type: git
+  source:
+    branch: master
+    uri: git@github.com:cloudfoundry/sipid
+    ignore_paths: [ci/*]
+    private_key: {{sipid-git-deploy-private-key}}
+
+- name: version
+  type: semver
+  source:
+    driver: git
+    uri: git@github.com:cloudfoundry/sipid
+    branch: version
+    file: version
+    private_key: {{sipid-git-deploy-private-key}}
+
+- name: sipid-github-release
+  type: github-release
+  source:
+    access_token: {{sipid-github-release-access-token}}
+    repository: sipid
+    user: cloudfoundry
+
+- name: sipid-ci
+  type: git
+  source:
+    branch: master
+    uri: https://github.com/cloudfoundry/sipid
+    paths: [ci/*]
+
+jobs:
+- name: test
+  plan:
+  - do:
+    - aggregate:
+      - get: sipid-ci
+      - get: sipid
+        trigger: true
+    - task: unit-test
+      file: sipid-ci/ci/tasks/unit-test.yml
+
+- name: shipit
+  serial_groups: [version]
+  plan:
+  - do:
+    - aggregate:
+      - get: sipid-ci
+      - get: sipid
+        passed: [test]
+      - get: version
+        params: {bump: patch}
+    - task: build
+      file: sipid-ci/ci/tasks/build.yml
+    - put: sipid
+      params:
+        repository: sipid
+        tag: version/version
+        tag_prefix: v
+        rebase: true
+    - aggregate:
+      - put: sipid-github-release
+        params:
+          name: version/version
+          tag: version/version
+          tag_prefix: v
+          globs:
+          - built-binary/sipid
+      - put: version
+        params: {file: version/version}
+
+- name: major
+  public: true
+  serial_groups: [version]
+  plan:
+  - get: version
+    params: {bump: major, pre: rc}
+  - put: version
+    params: {file: version/version}
+
+- name: minor
+  public: true
+  serial_groups: [version]
+  plan:
+  - get: version
+    params: {bump: minor, pre: rc}
+  - put: version
+    params: {file: version/version}
+
+- name: patch
+  public: true
+  serial_groups: [version]
+  plan:
+  - get: version
+    params: {bump: patch, pre: rc}
+  - put: version
+    params: {file: version/version}
