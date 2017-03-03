@@ -4,8 +4,10 @@ set -e
 
 export GOPATH="${PWD}/gopath"
 export PATH="${GOPATH}/bin:${PATH}"
-go get github.com/onsi/ginkgo/ginkgo
-go get github.com/onsi/ginkgo/gomega
+
+go get github.com/onsi/ginkgo
+go get github.com/onsi/gomega
+go install github.com/onsi/ginkgo/ginkgo
 
 cd gopath/src/github.com/cloudfoundry/sipid
 
