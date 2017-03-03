@@ -1,0 +1,14 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source: { repository: golang }
+
+inputs:
+- name: sipid-ci
+- name: sipid
+  path: gopath/src/github.com/cloudfoundry/sipid
+
+run:
+  path: sipid-ci/ci/tasks/unit-test.sh
