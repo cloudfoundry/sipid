@@ -1,0 +1,17 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source: {repository: concourse/static-golang}
+
+inputs:
+- name: sipid-ci
+- name: sipid
+  path: gopath/src/github.com/cloudfoundry/sipid
+
+outputs:
+- name: built-binary
+
+run:
+  path: sipid-ci/ci/tasks/build.sh
