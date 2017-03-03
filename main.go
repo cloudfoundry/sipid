@@ -78,7 +78,7 @@ func killCmd() {
 
 func usage() {
 	claimUsage := fmt.Sprintf("%s claim --pid PID --pid-file PID_FILE", os.Args[0])
-	killUsage := fmt.Sprintf("%s kill --pid PID [--show-stacks]", os.Args[0])
+	killUsage := fmt.Sprintf("%s kill --pid-file PID_FILE [--show-stacks]", os.Args[0])
 
 	fmt.Fprintf(os.Stderr, "usage: %s\n       %s\n", claimUsage, killUsage)
 	os.Exit(1)

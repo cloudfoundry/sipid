@@ -1,4 +1,45 @@
-# Examplar Release
+# Sipid
+
+`sipid` intends to give BOSH release authors an easier way to manage pidfiles. Pidfiles are used by Monit (and therefore
+BOSH) to track which process should be monitored. It is the responsibility of a BOSH job to write its process ID (PID)
+to the pidfile during start, and reference the same pidfile to find the process to kill during stop.
+
+Correct pidfile management has a couple potential pitfalls, since your scripts may be called multiple times and result
+in race conditions. To make this simpler, `sipid` provides simple `claim` and `kill` commands that manage the trickiest
+parts of pidfiles.
+
+## Claim
+
+`sipid claim --pid PID --pid-file PID_FILE` will write the given process's PID to the PID_FILE. It's algorithm looks
+roughly like this:
+
+1. Ensure the directory referenced by the PID_FILE exists. Create it if it does not
+1. Place a file lock ([flock](http://man7.org/linux/man-pages/man2/flock.2.html)) on the PID_FILE. If the PID_FILE is
+   already locked, this implies another process is attempting to claim the PID_FILE, and the current process should
+   abort.
+1. If the PID_FILE already exists, attempt to find a process with the PID in the PID_FILE. If that process is running,
+   the current process should not attempt to claim the PID_FILE and continue with startup, and should abort.
+1. If the process has not yet aborted, it is safe to write the given PID to the PID_FILE and give up the file lock.
+   It is now safe to continue starting up the BOSH job.
+
+## Kill
+
+`sipid kill --pid-file PID_FILE [--show-stacks]` will kill the process given by the PID_FILE. Monit only allows a short
+time to stop a process, so we must kill the process aggressively if it does not clean itself up within a 20-second
+grace period. The algorithm looks roughly like this:
+
+1. Get the PID in the PID_FILE
+1. If there is no running process with that PID, there is nothing to do, so exit.
+1. Send `SIGTERM` (i.e. a normal `kill "$PID"`) to the process to give it time to clean up.
+1. Poll the process for 20 seconds. If it has quit on its own, exit.
+1. If the process has not exited after 30 seconds, send a `SIGKILL` to the process to force it to exit immediately.
+
+If the `--show-stacks` parameter is provided to sipid, before sending `SIGKILL`, it will attempt to get the process to
+dump its stack traces by sending `SIGQUIT` (i.e. `kill -3 "$PID"`) to aid with debugging a "stuck" process. Not all
+processes respond to `SIGQUIT`, and if yours does not, you may wish to implement a `SIGQUIT` handler to make debugging
+more consistent for operators.
+
+# Exemplar Release
 
 ## To ERB or not to ERB
 
