@@ -1,4 +1,0 @@
----
-name: paragon
-templates:
-  drain.erb: bin/drain
