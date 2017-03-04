@@ -3,6 +3,7 @@ package pid
 import (
 	"io/ioutil"
 	"strconv"
+	"strings"
 )
 
 type BadPidfile struct {
@@ -23,9 +24,10 @@ func NewPidfile(pidfilePath string) (Pidfile, error) {
 		return Pidfile{}, err
 	}
 
-	pid, err := strconv.Atoi(string(pidfileContents))
+	// TODO: test
+	pid, err := strconv.Atoi(strings.TrimSpace(string(pidfileContents)))
 	if err != nil {
-		return Pidfile{}, BadPidfile{msg: "Pidfile does not contain a valid PID"}
+		return Pidfile{}, BadPidfile{msg: "pidfile does not contain a valid PID"}
 	}
 
 	return Pidfile{pid: pid}, nil

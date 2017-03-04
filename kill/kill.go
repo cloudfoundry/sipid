@@ -18,6 +18,11 @@ func Kill(ctx context.Context, pid int, showStacks bool) error {
 	exited := p.setupExitWaiter()
 
 	if err := p.tryKill(); err != nil {
+		// TODO: test
+		if err.Error() == "os: process already finished" {
+			return nil
+		}
+
 		return err
 	}
 
