@@ -40,6 +40,19 @@ var _ = Describe("pidfile", func() {
 			})
 		})
 
+		Context("contains an integer with some whitespace", func() {
+			BeforeEach(func() {
+				pidfile.WriteString("  7 \n")
+			})
+
+			It("knows the PID", func() {
+				p, err := pid.NewPidfile(pidfile.Name())
+				Expect(err).ToNot(HaveOccurred())
+
+				Expect(p.PID()).To(Equal(7))
+			})
+		})
+
 		Context("does not contain an integer", func() {
 			BeforeEach(func() {
 				pidfile.WriteString("a")
