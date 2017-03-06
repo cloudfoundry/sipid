@@ -1,17 +1,18 @@
 package pid
 
 import (
+	"fmt"
 	"io/ioutil"
 	"strconv"
 	"strings"
 )
 
-type BadPidfile struct {
-	msg string
+type BadPidfileError struct {
+	pidfile string
 }
 
-func (e BadPidfile) Error() string {
-	return e.msg
+func (e BadPidfileError) Error() string {
+	return fmt.Sprintf("pidfile (%s) does not contain a valid pid")
 }
 
 type Pidfile struct {
@@ -26,7 +27,7 @@ func NewPidfile(pidfilePath string) (Pidfile, error) {
 
 	pid, err := strconv.Atoi(strings.TrimSpace(string(pidfileContents)))
 	if err != nil {
-		return Pidfile{}, BadPidfile{msg: "Pidfile does not contain a valid PID"}
+		return Pidfile{}, BadPidfileError{pidfile: pidfilePath}
 	}
 
 	return Pidfile{pid: pid}, nil

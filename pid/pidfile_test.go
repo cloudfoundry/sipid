@@ -60,7 +60,7 @@ var _ = Describe("pidfile", func() {
 
 			It("returns a BadPidfile error", func() {
 				_, err := pid.NewPidfile(pidfile.Name())
-				Expect(err).To(BeAssignableToTypeOf(pid.BadPidfile{}))
+				Expect(err).To(MatchError(ContainSubstring("does not contain a valid pid")))
 			})
 		})
 	})
