@@ -21,8 +21,9 @@ func Kill(ctx context.Context, pidfilePath string, showStacks bool) error {
 	}
 
 	p := findProcess(pidfile.PID())
-
 	exited := p.setupExitWaiter()
+
+	defer os.Remove(pidfilePath)
 
 	if err := p.tryKill(); err != nil {
 		return err
@@ -91,7 +92,7 @@ func (p *process) showStacksAndKill() error {
 	time.Sleep(100 * time.Millisecond)
 
 	// SIGKILL might error if SIGQUIT caused a quit; ignore error
-	p.proc.Signal(syscall.SIGKILL)
+	p.kill()
 
 	return nil
 }

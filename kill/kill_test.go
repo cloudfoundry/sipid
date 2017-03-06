@@ -50,6 +50,15 @@ var _ = Describe("Kill", func() {
 
 			Eventually(running(process)).Should(BeFalse())
 		})
+
+		It("removes the pidfile", func() {
+			ctx := context.Background()
+
+			err := kill.Kill(ctx, pidfilePath, false)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(pidfilePath).NotTo(BeAnExistingFile())
+		})
 	})
 
 	Context("when the process we're killing doesn't go away easily", func() {
@@ -79,6 +88,16 @@ var _ = Describe("Kill", func() {
 			Eventually(running(process)).Should(BeFalse())
 
 			Expect(stderr).To(gbytes.Say("SIGQUIT: quit"))
+		})
+
+		It("removes the pidfile", func() {
+			ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
+			defer cancel()
+
+			err := kill.Kill(ctx, pidfilePath, false)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(pidfilePath).NotTo(BeAnExistingFile())
 		})
 	})
 })
