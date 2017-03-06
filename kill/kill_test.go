@@ -2,47 +2,50 @@ package kill_test
 
 import (
 	"context"
+	"io"
+	"io/ioutil"
+	"os"
 	"os/exec"
+	"syscall"
 	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
 
-	"io"
-	"os"
-	"syscall"
-
 	"github.com/cloudfoundry/sipid/kill"
+	"strconv"
 )
 
 var _ = Describe("Kill", func() {
 	var (
-		path string
+		processPath string
+		pidfilePath string
 
 		process *os.Process
 		stderr  *gbytes.Buffer
 	)
 
 	JustBeforeEach(func() {
-		process, stderr = startFixture(path)
-	})
+		process, stderr = startFixture(processPath)
 
-	//AfterEach(func() {
-	//	// really make sure we do not leak anything
-	//	process.Kill()
-	//
-	//})
+		pidfile, err := ioutil.TempFile("", "pidfile")
+		Expect(err).ToNot(HaveOccurred())
+		pidfile.WriteString(strconv.Itoa(process.Pid))
+		pidfile.Close()
+
+		pidfilePath = pidfile.Name()
+	})
 
 	Context("when the process we're killing goes away easily", func() {
 		BeforeEach(func() {
-			path = easyPath
+			processPath = easyPath
 		})
 
 		It("stops the process", func() {
 			ctx := context.Background()
 
-			err := kill.Kill(ctx, process.Pid, false)
+			err := kill.Kill(ctx, pidfilePath, false)
 			Expect(err).NotTo(HaveOccurred())
 
 			Eventually(running(process)).Should(BeFalse())
@@ -51,14 +54,14 @@ var _ = Describe("Kill", func() {
 
 	Context("when the process we're killing doesn't go away easily", func() {
 		BeforeEach(func() {
-			path = hardPath
+			processPath = hardPath
 		})
 
 		It("eventually goes away too after we become more violent", func() {
 			ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
 			defer cancel()
 
-			err := kill.Kill(ctx, process.Pid, false)
+			err := kill.Kill(ctx, pidfilePath, false)
 			Expect(err).NotTo(HaveOccurred())
 
 			Eventually(running(process)).Should(BeFalse())
@@ -70,7 +73,7 @@ var _ = Describe("Kill", func() {
 			ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
 			defer cancel()
 
-			err := kill.Kill(ctx, process.Pid, true)
+			err := kill.Kill(ctx, pidfilePath, true)
 			Expect(err).NotTo(HaveOccurred())
 
 			Eventually(running(process)).Should(BeFalse())

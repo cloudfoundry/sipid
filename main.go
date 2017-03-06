@@ -61,16 +61,10 @@ func killCmd() {
 		usage()
 	}
 
-	desiredPID, err := pid.NewPidfile(pidfilePath)
-	if err != nil {
-		log.Printf("kill failed: %s\n", err.Error())
-		os.Exit(1)
-	}
-
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
-	if err := kill.Kill(ctx, desiredPID.PID(), showStacks); err != nil {
+	if err := kill.Kill(ctx, pidfilePath, showStacks); err != nil {
 		log.Printf("kill failed: %s\n", err.Error())
 		os.Exit(1)
 	}

@@ -5,6 +5,8 @@ import (
 	"os"
 	"syscall"
 	"time"
+	
+	"github.com/cloudfoundry/sipid/pid"
 )
 
 // Kill attempts to gracefully kill a process, and will violently
@@ -12,8 +14,13 @@ import (
 //
 // If showStacks is true then SIGQUIT will be sent to attempt a
 // retrieval of the process's stack before it is violently killed.
-func Kill(ctx context.Context, pid int, showStacks bool) error {
-	p := findProcess(pid)
+func Kill(ctx context.Context, pidfilePath string, showStacks bool) error {
+	pidfile, err := pid.NewPidfile(pidfilePath)
+	if err != nil {
+		return err
+	}
+
+	p := findProcess(pidfile.PID())
 
 	exited := p.setupExitWaiter()
 
