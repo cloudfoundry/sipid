@@ -47,7 +47,7 @@ grace period. The algorithm looks roughly like this:
 1. If there is no running process with that PID, there is nothing to do, so exit.
 1. Send `SIGTERM` (i.e. a normal `kill "$PID"`) to the process to give it time to clean up.
 1. Poll the process for 20 seconds. If it has quit on its own, exit.
-1. If the process has not exited after 30 seconds, send a `SIGKILL` to the process to force it to exit immediately.
+1. If the process has not exited after 20 seconds, send a `SIGKILL` to the process to force it to exit immediately.
 1. Finally, remove the pidfile
    - This is to prevent a future `claim` from failing if the PID is reused by a different process later
 
