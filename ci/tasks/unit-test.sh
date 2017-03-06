@@ -6,7 +6,7 @@ export GOPATH="${PWD}/gopath"
 export PATH="${GOPATH}/bin:${PATH}"
 
 go get github.com/onsi/ginkgo
-go get github.com/onsi/gomega
+go get github.com/onsi/gomega/...
 go install github.com/onsi/ginkgo/ginkgo
 
 cd gopath/src/github.com/cloudfoundry/sipid
