@@ -37,6 +37,24 @@ var _ = Describe("Kill", func() {
 		pidfilePath = pidfile.Name()
 	})
 
+	Context("when the process is not running", func() {
+		BeforeEach(func() {
+			processPath = easyPath
+		})
+
+		JustBeforeEach(func() {
+			process.Kill()
+			process.Wait()
+		})
+
+		It("does not return an error", func() {
+			ctx := context.Background()
+
+			err := kill.Kill(ctx, pidfilePath, false)
+			Expect(err).NotTo(HaveOccurred())
+		})
+	})
+
 	Context("when the process we're killing goes away easily", func() {
 		BeforeEach(func() {
 			processPath = easyPath

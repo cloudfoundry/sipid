@@ -21,6 +21,10 @@ func Kill(ctx context.Context, pidfilePath string, showStacks bool) error {
 	}
 
 	p := findProcess(pidfile.PID())
+	if !p.running() {
+		return nil
+	}
+
 	exited := p.setupExitWaiter()
 
 	defer os.Remove(pidfilePath)
@@ -41,8 +45,8 @@ func Kill(ctx context.Context, pidfilePath string, showStacks bool) error {
 	}
 }
 
-func running(process *os.Process) bool {
-	err := process.Signal(syscall.Signal(0))
+func (p *process) running() bool {
+	err := p.proc.Signal(syscall.Signal(0))
 	return err == nil
 }
 
@@ -62,7 +66,7 @@ func (p *process) setupExitWaiter() chan struct{} {
 	exited := make(chan struct{})
 
 	go func() {
-		for running(p.proc) {
+		for p.running() {
 			time.Sleep(10 * time.Millisecond)
 		}
 
