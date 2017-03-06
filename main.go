@@ -10,6 +10,7 @@ import (
 
 	"github.com/cloudfoundry/sipid/kill"
 	"github.com/cloudfoundry/sipid/pid"
+	"github.com/cloudfoundry/sipid/poll"
 )
 
 func main() {
@@ -22,6 +23,8 @@ func main() {
 		claimCmd()
 	case "kill":
 		killCmd()
+	case "wait-until-healthy":
+		waitCmd()
 	default:
 		usage()
 	}
@@ -70,10 +73,36 @@ func killCmd() {
 	}
 }
 
-func usage() {
-	claimUsage := fmt.Sprintf("%s claim --pid PID --pid-file PID_FILE", os.Args[0])
-	killUsage := fmt.Sprintf("%s kill --pid-file PID_FILE [--show-stacks]", os.Args[0])
+func waitCmd() {
+	var healthcheckURL string
+	var timeout time.Duration
+	var pollingFrequency time.Duration
 
-	fmt.Fprintf(os.Stderr, "usage: %s\n       %s\n", claimUsage, killUsage)
+	flag.StringVar(&healthcheckURL, "url", "", "URL to poll for system health")
+	flag.DurationVar(&timeout, "timeout", time.Minute, "timeout for system to become healthy")
+	flag.DurationVar(&pollingFrequency, "polling-frequency", 5 * time.Second, "frequency to poll healthcheck endpoint")
+	flag.CommandLine.Parse(os.Args[2:])
+
+	if healthcheckURL == "" {
+		usage()
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	if err := poll.Poll(ctx, healthcheckURL, pollingFrequency); err != nil {
+		log.Printf("poll failed: %s\n", err.Error())
+		os.Exit(1)
+	}
+}
+
+func usage() {
+	indent := "       "
+	claimUsage := fmt.Sprintf("%s claim --pid PID --pid-file PID_FILE", os.Args[0])
+	killUsage := fmt.Sprintf("%s%s kill --pid-file PID_FILE [--show-stacks]", indent, os.Args[0])
+	waitUsage := fmt.Sprintf("%s%s wait-until-healthy --url HEALTHCHECK_URL [--timeout DURATION (default 1m)] [--polling-frequency DURATION (default 5s)]", indent, os.Args[0])
+
+	fmt.Fprintf(os.Stderr, "usage: %s\n%s\n%s\n", claimUsage, killUsage, waitUsage)
+	fmt.Fprintf(os.Stderr, "\n%sDURATIONS must be specified with units (e.g. 10s, 4m, 500ms)\n", indent)
 	os.Exit(1)
 }

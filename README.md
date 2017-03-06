@@ -67,6 +67,23 @@ PIDFILE="/var/vcap/sys/run/example-job/web.pid"
 sipid kill --pid-file "$PIDFILE" --show-stacks
 ```
 
+## Wait Until Healthy
+
+`sipid wait-until-healthy --url HEALTHCHECK_URL [--timeout DURATION (default 1m)] [--polling-frequency DURATION (default 5s)]`
+will continually poll a healthcheck endpoint (at the requested frequency, until the requested timeout) until it returns
+an HTTP 200 status code. If the healthcheck is not healthy by the timeout deadline, the process will exit non-zero.
+
+### BOSH Usage
+
+```
+#!/usr/bin/env bash
+
+# If a command fails, exit immediately
+set -e
+
+sipid wait-until-healthy --url https://127.0.0.1:58074/healthcheck --timeout 2m --polling-frequency 1s
+```
+
 ## Examples
 
 To see examples of `sipid` in action, look at the scripts in the [example/](example/) directory.
