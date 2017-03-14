@@ -39,7 +39,7 @@ func Poll(ctx context.Context, healthcheckURL string, pollingFrequency time.Dura
 			return UnhealthyError{url: healthcheckURL, attempts: attempts}
 		}
 	}
-	return errors.New("Chris")
+	return errors.New("Polling failed unexpectedly")
 }
 
 func urlHealthy(ctx context.Context, url string) bool {
