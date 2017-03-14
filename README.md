@@ -53,17 +53,10 @@ start-stop-daemon \
   --chuid vcap:vcap \
   --start \
   --exec /var/vcap/packages/example-job/bin/web
+  -- \
+    --extra arguments \
+    --to-your process
 ```
-
-TODO: `--make-pidfile` has this note that we should understand before making a recommendation:
-
-> This feature may not work in all cases. Most notably when the program being executed forks from its main process.
-> Because of this, it is usually only useful when combined with the --background option.
-
-TODO: When are the common needs for `--background`?
-
-TODO: Provide example of additional args, example of `--exec bin/bash` with a start command that allows output
-redirection.
 
 ## Kill
 
@@ -108,9 +101,9 @@ set -e
 PIDFILE="/var/vcap/sys/run/example-job/web.pid"
 
 start-stop-daemon \
-  --pid-file "$PIDFILE"
+  --pidfile "$PIDFILE" \
   --remove-pidfile \
-  --schedule TERM/20/QUIT/1/KILL \
+  --retry TERM/20/QUIT/1/KILL \
   --oknodo \
   --stop
 ```
