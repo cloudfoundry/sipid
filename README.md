@@ -37,6 +37,34 @@ sipid claim --pid "$$" --pid-file "$PIDFILE"
 exec chpst -u vcap:vcap /var/vcap/packages/example-job/bin/web
 ```
 
+### start-stop-daemon equivalent
+
+```
+#!/usr/bin/env bash
+
+RUN_DIR="/var/vcap/sys/run/example-job"
+PIDFILE="$RUN_DIR/web.pid"
+
+mkdir -p "$RUN_DIR"
+
+start-stop-daemon \
+  --pidfile "$PIDFILE" \
+  --make-pidfile \
+  --chuid vcap:vcap \
+  --start \
+  --exec /var/vcap/packages/example-job/bin/web
+```
+
+TODO: `--make-pidfile` has this note that we should understand before making a recommendation:
+
+> This feature may not work in all cases. Most notably when the program being executed forks from its main process.
+> Because of this, it is usually only useful when combined with the --background option.
+
+TODO: When are the common needs for `--background`?
+
+TODO: Provide example of additional args, example of `--exec bin/bash` with a start command that allows output
+redirection.
+
 ## Kill
 
 `sipid kill --pid-file PID_FILE [--show-stacks]` will kill the process given by the PID_FILE. Monit only allows a short
@@ -67,6 +95,24 @@ set -e
 PIDFILE="/var/vcap/sys/run/example-job/web.pid"
 
 sipid kill --pid-file "$PIDFILE" --show-stacks
+```
+
+### start-stop-daemon equivalent
+
+```
+#!/usr/bin/env bash
+
+# If a command fails, exit immediately
+set -e
+
+PIDFILE="/var/vcap/sys/run/example-job/web.pid"
+
+start-stop-daemon \
+  --pid-file "$PIDFILE"
+  --remove-pidfile \
+  --schedule TERM/20/QUIT/1/KILL \
+  --oknodo \
+  --stop
 ```
 
 ## Wait Until Healthy
